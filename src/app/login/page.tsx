@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -10,8 +10,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'student') {
+        router.push('/student/dashboard');
+      } else if (user.role === 'hiring_manager') {
+        router.push('/hiring-manager/dashboard');
+      }
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,8 +30,22 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      router.push('/');
+      const response = await login(email, password);
+      
+      // Get the user data after login
+      // The login function updates the auth context, so we can access user from there
+      // Wait a tick for state to update before redirecting
+      setTimeout(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          if (userData.role === 'student') {
+            router.push('/student/dashboard');
+          } else if (userData.role === 'hiring_manager') {
+            router.push('/hiring-manager/dashboard');
+          }
+        }
+      }, 0);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {

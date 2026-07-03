@@ -10,9 +10,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
-  // Load user from localStorage on mount
+  // Load user from localStorage on mount (client-side only)
   useEffect(() => {
+    setMounted(true);
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
@@ -34,8 +36,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(data);
 
       // Store in localStorage
-      localStorage.setItem('token', newToken);
-      localStorage.setItem('user', JSON.stringify(data));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', newToken);
+        localStorage.setItem('user', JSON.stringify(data));
+      }
 
       setLoading(false);
     } catch (error) {
@@ -54,8 +58,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userData);
 
       // Store in localStorage
-      localStorage.setItem('token', newToken);
-      localStorage.setItem('user', JSON.stringify(userData));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', newToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
 
       setLoading(false);
     } catch (error) {
@@ -67,9 +73,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
   };
+
+  // Don't render until mounted (prevents hydration mismatch)
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   const value: AuthContextType = {
     user,

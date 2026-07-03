@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { authService } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
 
@@ -14,9 +15,20 @@ export default function RegisterPage() {
   const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated, user } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'student') {
+        router.push('/student/dashboard');
+      } else if (user.role === 'hiring_manager') {
+        router.push('/hiring-manager/dashboard');
+      }
+    }
+  }, [isAuthenticated, user, router]);
 
   // Set role from URL params if provided
   useEffect(() => {
@@ -44,14 +56,26 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({
+      const response = await authService.register({
         name,
         email,
         password,
         confirmPassword,
         role,
       });
-      router.push('/');
+
+      // Store token and user in localStorage
+      if (response.token && response.data) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.data));
+
+        // Redirect based on role
+        if (response.data.role === 'student') {
+          router.push('/student/dashboard');
+        } else if (response.data.role === 'hiring_manager') {
+          router.push('/hiring-manager/dashboard');
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {

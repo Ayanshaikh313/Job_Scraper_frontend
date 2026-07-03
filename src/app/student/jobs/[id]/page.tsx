@@ -4,14 +4,13 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StudentLayout } from '@/components/StudentLayout';
-import { useAuth } from '@/context/AuthContext';
 import { jobService, applicationService } from '@/services/api';
 import { Job } from '@/types';
 
 export default function JobDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { token } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
   const jobId = params.id as string;
 
   const [job, setJob] = useState<Job | null>(null);
@@ -20,6 +19,14 @@ export default function JobDetailsPage() {
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Get token from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      setToken(storedToken);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchJob = async () => {

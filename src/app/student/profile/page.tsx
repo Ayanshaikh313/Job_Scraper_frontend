@@ -3,11 +3,19 @@
 import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StudentLayout } from '@/components/StudentLayout';
-import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/services/api';
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt?: string;
+}
+
 export default function StudentProfilePage() {
-  const { user, token } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [editing, setEditing] = useState(false);
@@ -15,12 +23,21 @@ export default function StudentProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Get token and user from localStorage on mount
   useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setEmail(user.email);
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      setToken(storedToken);
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        setName(userData.name);
+        setEmail(userData.email);
+      }
     }
-  }, [user]);
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

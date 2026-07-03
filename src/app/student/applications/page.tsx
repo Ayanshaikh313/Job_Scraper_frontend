@@ -4,17 +4,24 @@ import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StudentLayout } from '@/components/StudentLayout';
 import { StatusBadge } from '@/components/StatusBadge';
-import { useAuth } from '@/context/AuthContext';
 import { applicationService } from '@/services/api';
 import { Application } from '@/types';
 
 export default function ApplicationsPage() {
-  const { token } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Get token from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      setToken(storedToken);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchApplications = async () => {

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StudentLayout } from '@/components/StudentLayout';
-import { useAuth } from '@/context/AuthContext';
 import { applicationService, jobService } from '@/services/api';
 
 interface DashboardStats {
@@ -14,8 +13,16 @@ interface DashboardStats {
   totalInternalJobs: number;
 }
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export default function StudentDashboard() {
-  const { user, token } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalApplications: 0,
     acceptedApplications: 0,
@@ -24,6 +31,19 @@ export default function StudentDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Get token and user from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      setToken(storedToken);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {

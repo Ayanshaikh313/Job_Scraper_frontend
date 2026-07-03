@@ -4,12 +4,11 @@ import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { StudentLayout } from '@/components/StudentLayout';
 import { JobCard } from '@/components/JobCard';
-import { useAuth } from '@/context/AuthContext';
 import { jobService } from '@/services/api';
 import { Job, ExternalJob } from '@/types';
 
 export default function StudentJobsPage() {
-  const { token } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
   const [internalJobs, setInternalJobs] = useState<Job[]>([]);
   const [externalJobs, setExternalJobs] = useState<ExternalJob[]>([]);
   const [search, setSearch] = useState('');
@@ -17,29 +16,60 @@ export default function StudentJobsPage() {
   const [loadingExternal, setLoadingExternal] = useState(true);
   const [error, setError] = useState('');
 
+  // Get token from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      console.log('[StudentJobsPage] Token from localStorage:', storedToken ? storedToken.substring(0, 20) + '...' : 'null');
+      setToken(storedToken);
+    }
+  }, []);
+
+  // Log when external jobs state changes
+  useEffect(() => {
+    console.log('[StudentJobsPage] externalJobs state updated:', externalJobs.length, 'jobs');
+  }, [externalJobs]);
+
+  // Log when internal jobs state changes
+  useEffect(() => {
+    console.log('[StudentJobsPage] internalJobs state updated:', internalJobs.length, 'jobs');
+  }, [internalJobs]);
+
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!token) return;
+      if (!token) {
+        console.log('[StudentJobsPage] No token available');
+        return;
+      }
 
       try {
+        console.log('[StudentJobsPage] Starting fetch with token:', token.substring(0, 20) + '...');
+        
         // Fetch internal jobs
         setLoadingInternal(true);
+        console.log('[StudentJobsPage] Fetching internal jobs...');
         const internalRes = await jobService.getJobs(token, {
           search: search || undefined,
         });
+        console.log('[StudentJobsPage] Internal jobs response:', internalRes);
         setInternalJobs(internalRes.data || []);
 
         // Fetch external jobs
         setLoadingExternal(true);
+        console.log('[StudentJobsPage] Fetching external jobs...');
         const externalRes = await jobService.getExternalJobs(token, {
           search: search || undefined,
         });
+        console.log('[StudentJobsPage] External jobs response:', externalRes);
+        console.log('[StudentJobsPage] External jobs data:', externalRes.data);
+        console.log('[StudentJobsPage] External jobs data length:', externalRes.data?.length);
         setExternalJobs(externalRes.data || []);
 
         setError('');
+        console.log('[StudentJobsPage] Fetch completed successfully');
       } catch (err) {
-        setError('Failed to load jobs. Please try again.');
-        console.error(err);
+        console.error('[StudentJobsPage] Error fetching jobs:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load jobs. Please try again.');
       } finally {
         setLoadingInternal(false);
         setLoadingExternal(false);
@@ -47,6 +77,7 @@ export default function StudentJobsPage() {
     };
 
     const timer = setTimeout(() => {
+      console.log('[StudentJobsPage] Timer triggered, calling fetchJobs');
       fetchJobs();
     }, 500);
 

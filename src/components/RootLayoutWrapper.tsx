@@ -17,12 +17,18 @@ export const RootLayoutWrapper = ({ children }: RootLayoutWrapperProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const updateAuthState = () => {
+    if (typeof window === 'undefined') return;
+    
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     
     if (token && storedUser) {
       setIsAuthenticated(true);
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
     } else {
       setIsAuthenticated(false);
       setUser(null);

@@ -9,10 +9,11 @@ import { SkeletonCard } from '@/components/SkeletonCard';
 import { EmptyState } from '@/components/EmptyState';
 import { jobService } from '@/services/api';
 import { showToast } from '@/utils/toast';
-import { Job } from '@/types';
+import { Job, User } from '@/types';
 
 export default function HiringManagerJobsPage() {
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,18 +24,23 @@ export default function HiringManagerJobsPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
       setToken(storedToken);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser) as User);
+      }
     }
   }, []);
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!token) return;
+      if (!token || !user) return;
 
       try {
         setLoading(true);
         const res: any = await jobService.getJobs(token);
-        setJobs(res.data || []);
+        const ownJobs = (res.data || []).filter((job: Job) => job.createdBy?._id === user._id);
+        setJobs(ownJobs);
         setError('');
       } catch (err: any) {
         setError(err.message || 'Failed to load jobs');
@@ -45,7 +51,7 @@ export default function HiringManagerJobsPage() {
     };
 
     fetchJobs();
-  }, [token]);
+  }, [token, user]);
 
   const handleDelete = async (jobId: string) => {
     if (!token || !window.confirm('Are you sure you want to delete this job?')) return;

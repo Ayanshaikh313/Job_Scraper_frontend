@@ -6,6 +6,8 @@ import { StudentLayout } from '@/components/StudentLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { EmptyState } from '@/components/EmptyState';
+import { ResumeViewer } from '@/components/ResumeViewer';
+import { AnswersViewer } from '@/components/AnswersViewer';
 import { applicationService } from '@/services/api';
 import { Application } from '@/types';
 
@@ -94,31 +96,94 @@ export default function ApplicationsPage() {
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                           Applied Date
                         </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                          Documents
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {applications.map((app) => (
-                        <tr
-                          key={app._id}
-                          className="border-b border-gray-200 hover:bg-gray-50 transition"
-                        >
-                          <td className="px-6 py-4 text-gray-900 font-semibold">
-                            {app.jobId.title}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700">
-                            {app.jobId.company}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700">
-                            {app.jobId.location}
-                          </td>
-                          <td className="px-6 py-4">
-                            <StatusBadge status={app.status} />
-                          </td>
-                          <td className="px-6 py-4 text-gray-600">
-                            {new Date(app.appliedAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
+                      {applications.map((app) => {
+                        // Safety check: job might be deleted after application was created
+                        if (!app.jobId) {
+                          return (
+                            <tr
+                              key={app._id}
+                              className="border-b border-gray-200 hover:bg-gray-50 transition"
+                            >
+                              <td className="px-6 py-4 text-gray-500 italic">
+                                [Job Deleted]
+                              </td>
+                              <td className="px-6 py-4 text-gray-500 italic">
+                                [Job Deleted]
+                              </td>
+                              <td className="px-6 py-4 text-gray-500 italic">
+                                [Job Deleted]
+                              </td>
+                              <td className="px-6 py-4">
+                                <StatusBadge status={app.status} />
+                              </td>
+                              <td className="px-6 py-4 text-gray-600">
+                                {new Date(app.appliedAt).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex gap-3">
+                                  {app.resumeUrl && (
+                                    <ResumeViewer
+                                      resumeUrl={app.resumeUrl}
+                                      applicantName="Your"
+                                    />
+                                  )}
+                                  {app.answers && app.answers.length > 0 && (
+                                    <AnswersViewer
+                                      answers={app.answers}
+                                      applicantName="Your"
+                                    />
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return (
+                          <tr
+                            key={app._id}
+                            className="border-b border-gray-200 hover:bg-gray-50 transition"
+                          >
+                            <td className="px-6 py-4 text-gray-900 font-semibold">
+                              {app.jobId.title}
+                            </td>
+                            <td className="px-6 py-4 text-gray-700">
+                              {app.jobId.company}
+                            </td>
+                            <td className="px-6 py-4 text-gray-700">
+                              {app.jobId.location}
+                            </td>
+                            <td className="px-6 py-4">
+                              <StatusBadge status={app.status} />
+                            </td>
+                            <td className="px-6 py-4 text-gray-600">
+                              {new Date(app.appliedAt).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex gap-3">
+                                {app.resumeUrl && (
+                                  <ResumeViewer
+                                    resumeUrl={app.resumeUrl}
+                                    applicantName="Your"
+                                  />
+                                )}
+                                {app.answers && app.answers.length > 0 && (
+                                  <AnswersViewer
+                                    answers={app.answers}
+                                    applicantName="Your"
+                                  />
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

@@ -5,11 +5,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { HiringManagerLayout } from '@/components/HiringManagerLayout';
+import { SkeletonCard } from '@/components/SkeletonCard';
+import { EmptyState } from '@/components/EmptyState';
 import { jobService } from '@/services/api';
-import { Job } from '@/types';
+import { showToast } from '@/utils/toast';
+import { Job, User } from '@/types';
 
 export default function HiringManagerJobsPage() {
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,18 +24,23 @@ export default function HiringManagerJobsPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
       setToken(storedToken);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser) as User);
+      }
     }
   }, []);
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!token) return;
+      if (!token || !user) return;
 
       try {
         setLoading(true);
-        const res = await jobService.getJobs(token);
-        setJobs(res.data || []);
+        const res: any = await jobService.getJobs(token);
+        const ownJobs = (res.data || []).filter((job: Job) => job.createdBy?._id === user._id);
+        setJobs(ownJobs);
         setError('');
       } catch (err: any) {
         setError(err.message || 'Failed to load jobs');
@@ -42,7 +51,7 @@ export default function HiringManagerJobsPage() {
     };
 
     fetchJobs();
-  }, [token]);
+  }, [token, user]);
 
   const handleDelete = async (jobId: string) => {
     if (!token || !window.confirm('Are you sure you want to delete this job?')) return;
@@ -52,8 +61,11 @@ export default function HiringManagerJobsPage() {
       await jobService.deleteJob(token, jobId);
       setJobs(jobs.filter((job) => job._id !== jobId));
       setError('');
+      showToast.jobDeleted();
     } catch (err: any) {
-      setError(err.message || 'Failed to delete job');
+      const errorMessage = err.message || 'Failed to delete job';
+      setError(errorMessage);
+      showToast.apiError(errorMessage);
       console.error(err);
     } finally {
       setDeleting(null);
@@ -86,9 +98,7 @@ export default function HiringManagerJobsPage() {
 
           {/* Jobs List */}
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">Loading jobs...</p>
-            </div>
+            <SkeletonCard count={5} columns={1} />
           ) : jobs.length > 0 ? (
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="overflow-x-auto">
@@ -162,14 +172,13 @@ export default function HiringManagerJobsPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-lg p-12 text-center">
-              <p className="text-gray-600 mb-4">No jobs posted yet.</p>
-              <Link href="/hiring-manager/jobs/create">
-                <span className="text-blue-600 hover:text-blue-700 font-semibold">
-                  Post your first job →
-                </span>
-              </Link>
-            </div>
+            <EmptyState
+              icon="💼"
+              title="No jobs posted yet"
+              description="Start by posting your first job to attract candidates"
+              actionText="Post a Job"
+              actionHref="/hiring-manager/jobs/create"
+            />
           )}
         </div>
       </HiringManagerLayout>

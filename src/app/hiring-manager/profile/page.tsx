@@ -57,7 +57,7 @@ export default function HiringManagerProfilePage() {
       setSuccess('Profile updated successfully!');
       
       // Update localStorage
-      const updatedUser = { ...user, name, email };
+      const updatedUser: User = { ...user!, name, email };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
       

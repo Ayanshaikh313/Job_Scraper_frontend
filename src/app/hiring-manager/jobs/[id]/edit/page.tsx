@@ -33,7 +33,7 @@ export default function EditJobPage() {
 
       try {
         setLoading(true);
-        const res = await jobService.getJobById(token, jobId);
+        const res: any = await jobService.getJobById(token, jobId);
         setJob(res.data);
         setError('');
       } catch (err: any) {
@@ -104,6 +104,7 @@ export default function EditJobPage() {
               onSubmit={handleSubmit}
               isLoading={submitting}
               buttonText="Update Job"
+              isEditing={true}
             />
           </div>
         </div>

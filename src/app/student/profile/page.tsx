@@ -56,6 +56,9 @@ export default function StudentProfilePage() {
       await authService.updateProfile(token, { name, email });
       setSuccess('Profile updated successfully!');
       setEditing(false);
+      // Update localStorage
+      const updatedUser: User = { ...user!, name, email };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
       // Note: In a real app, you'd refresh the user context here
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {

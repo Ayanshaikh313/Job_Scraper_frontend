@@ -1,17 +1,11 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import { RootLayoutWrapper } from '@/components/RootLayoutWrapper';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 import './globals.css';
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'Job Scraper Platform',
@@ -24,12 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-gray-50">
-        <RootLayoutWrapper>{children}</RootLayoutWrapper>
+    <html lang="en" className={cn("h-full", "font-sans", geist.variable)} suppressHydrationWarning>
+      <body className="min-h-full bg-background text-foreground antialiased" suppressHydrationWarning>
+        <ThemeProvider>
+          <RootLayoutWrapper>{children}</RootLayoutWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -9,7 +9,7 @@ export const apiCall = async <T>(
 ): Promise<T> => {
   const { token, ...init } = options;
 
-  const headers: HeadersInit = {
+  const headers: any = {
     'Content-Type': 'application/json',
     ...init.headers,
   };
@@ -163,14 +163,29 @@ export const jobService = {
 
 export const applicationService = {
   /**
-   * Apply to a job (Students only)
+   * Apply to a job with resume and screening answers (Students only)
+   * Content-Type: multipart/form-data
    */
-  applyToJob: async (token: string, jobId: string) => {
-    return apiCall('/applications', {
+  applyToJob: async (token: string, jobId: string, resume: File, answers: Array<{ question: string; answer: string }>) => {
+    const formData = new FormData();
+    formData.append('jobId', jobId);
+    formData.append('resume', resume);
+    formData.append('answers', JSON.stringify(answers));
+
+    const response = await fetch(`${API_BASE_URL}/applications`, {
       method: 'POST',
-      token,
-      body: JSON.stringify({ jobId }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Application submission failed');
+    }
+
+    return response.json();
   },
 
   /**
@@ -203,6 +218,61 @@ export const applicationService = {
     return apiCall(endpoint, {
       token,
     });
+  },
+
+  /**
+   * Get ranked applicants for a job (Hiring Managers only)
+   */
+  getRankedApplicants: async (token: string, jobId: string) => {
+    return apiCall(`/applications/job/${jobId}/ranking`, {
+      token,
+    });
+  },
+
+  /**
+   * Get ATS dashboard stats for hiring manager
+   */
+  getHiringManagerDashboard: async (token: string) => {
+    return apiCall('/applications/dashboard/hiring-manager', {
+      token,
+    });
+  },
+
+  /**
+   * Get ATS details for a single application
+   */
+  getApplicationDetails: async (token: string, jobId: string, applicationId: string) => {
+    return apiCall(`/applications/job/${jobId}/${applicationId}`, {
+      token,
+    });
+  },
+
+  /**
+   * Get ATS details for a single application by application ID (fallback)
+   */
+  getApplicationDetailsById: async (token: string, applicationId: string) => {
+    return apiCall(`/applications/details/${applicationId}`, {
+      token,
+    });
+  },
+
+  /**
+   * Download ATS evaluation report for a single application
+   */
+  downloadApplicationReport: async (token: string, applicationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/report`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to download ATS report');
+    }
+
+    return response.blob();
   },
 
   /**

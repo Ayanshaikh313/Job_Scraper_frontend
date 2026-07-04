@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '@/context/AuthContext';
 import Link from 'next/link';
+import { AppNavbar } from '@/components/layout/app-navbar';
 
 interface RootLayoutWrapperProps {
   children: ReactNode;
@@ -16,12 +17,18 @@ export const RootLayoutWrapper = ({ children }: RootLayoutWrapperProps) => {
   const [user, setUser] = useState<any>(null);
 
   const updateAuthState = () => {
+    if (typeof window === 'undefined') return;
+    
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     
     if (token && storedUser) {
       setIsAuthenticated(true);
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
     } else {
       setIsAuthenticated(false);
       setUser(null);
@@ -70,78 +77,40 @@ export const RootLayoutWrapper = ({ children }: RootLayoutWrapperProps) => {
         pauseOnHover
         theme="light"
       />
-      {/* Simple navbar that doesn't use context */}
-      <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold text-blue-600">JobScraper</span>
-            </Link>
 
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-8">
-              {!isAuthenticated ? (
-                <>
-                  <Link href="/login" className="text-gray-700 hover:text-blue-600 transition">
-                    Login
-                  </Link>
-                  <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                    Register
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/profile" className="text-gray-700 hover:text-blue-600 transition">
-                    Profile
-                  </Link>
+      <div>
+        {/* Use the redesigned AppNavbar component */}
+        {/* AppNavbar handles mobile sheet, theme toggle, and responsive nav */}
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore */}
+        <AppNavbar isAuthenticated={isAuthenticated} user={user} onLogout={handleLogout} />
+      </div>
 
-                  {/* Role-based navigation */}
-                  {user?.role === 'student' && (
-                    <>
-                      <Link href="/student/dashboard" className="text-gray-700 hover:text-blue-600 transition">
-                        Dashboard
-                      </Link>
-                      <Link href="/student/jobs" className="text-gray-700 hover:text-blue-600 transition">
-                        Search Jobs
-                      </Link>
-                      <Link href="/student/applications" className="text-gray-700 hover:text-blue-600 transition">
-                        My Applications
-                      </Link>
-                    </>
-                  )}
+      <main className="flex-1">{children}</main>
 
-                  {user?.role === 'hiring_manager' && (
-                    <>
-                      <Link href="/hiring-manager/dashboard" className="text-gray-700 hover:text-blue-600 transition">
-                        Dashboard
-                      </Link>
-                      <Link href="/hiring-manager/jobs" className="text-gray-700 hover:text-blue-600 transition">
-                        My Jobs
-                      </Link>
-                      <Link href="/hiring-manager/jobs/create" className="text-gray-700 hover:text-blue-600 transition">
-                        Post Job
-                      </Link>
-                    </>
-                  )}
+      <footer className="mt-16">
+        <div className="border-t border-border/70 bg-background/90">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">JS</div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Job Scraper Platform</p>
+                <p className="text-xs text-muted-foreground">Modern recruiting for ambitious teams</p>
+              </div>
+            </div>
 
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-                  >
-                    Logout
-                  </button>
-                </>
-              )}
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <Link href="/login" className="transition hover:text-foreground">Login</Link>
+              <Link href="/register" className="transition hover:text-foreground">Register</Link>
+              <Link href="/student/jobs" className="transition hover:text-foreground">Explore jobs</Link>
             </div>
           </div>
         </div>
-      </nav>
 
-      <main className="flex-1">{children}</main>
-      <footer className="bg-gray-800 text-white py-8 mt-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <p className="text-center">&copy; 2024 Job Scraper Platform. All rights reserved.</p>
+        <div className="bg-background/95 border-t border-border/60">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 text-center text-sm text-muted-foreground">
+            © 2026 Job Scraper Platform. All rights reserved.
+          </div>
         </div>
       </footer>
     </AuthProvider>

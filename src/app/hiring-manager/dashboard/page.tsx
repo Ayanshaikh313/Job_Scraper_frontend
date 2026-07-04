@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { HiringManagerLayout } from '@/components/HiringManagerLayout';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { jobService, applicationService } from '@/services/api';
 
 interface DashboardStats {
@@ -61,7 +62,7 @@ export default function HiringManagerDashboard() {
         setLoading(true);
         
         // Get all jobs created by this hiring manager
-        const jobsRes = await jobService.getJobs(token);
+        const jobsRes: any = await jobService.getJobs(token);
         const jobs = jobsRes.data || [];
 
         // For each job, get its applicants
@@ -75,7 +76,7 @@ export default function HiringManagerDashboard() {
 
         for (const job of jobs) {
           try {
-            const applicantsRes = await applicationService.getJobApplicants(
+            const applicantsRes: any = await applicationService.getJobApplicants(
               token,
               job._id
             );
@@ -131,42 +132,42 @@ export default function HiringManagerDashboard() {
 
           {/* Stats Grid */}
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">Loading stats...</p>
+            <div className="py-12">
+              <LoadingSpinner size="lg" message="Loading your dashboard..." />
             </div>
           ) : (
             <>
               <div className="grid md:grid-cols-4 gap-6 mb-12">
                 {/* Total Jobs */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6 border-l-4 border-blue-600">
                   <div className="text-3xl font-bold text-blue-600 mb-2">
                     {stats.totalJobs}
                   </div>
-                  <p className="text-gray-600">Total Jobs Posted</p>
+                  <p className="text-gray-700 font-medium">Total Jobs Posted</p>
                 </div>
 
                 {/* Total Applicants */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6 border-l-4 border-green-600">
                   <div className="text-3xl font-bold text-green-600 mb-2">
                     {stats.totalApplicants}
                   </div>
-                  <p className="text-gray-600">Total Applicants</p>
+                  <p className="text-gray-700 font-medium">Total Applicants</p>
                 </div>
 
                 {/* Reviewing */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg shadow-md p-6 border-l-4 border-yellow-600">
                   <div className="text-3xl font-bold text-yellow-600 mb-2">
                     {stats.applicantsByStatus.reviewing}
                   </div>
-                  <p className="text-gray-600">Under Review</p>
+                  <p className="text-gray-700 font-medium">Under Review</p>
                 </div>
 
                 {/* Accepted */}
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-l-4 border-purple-600">
                   <div className="text-3xl font-bold text-purple-600 mb-2">
                     {stats.applicantsByStatus.accepted}
                   </div>
-                  <p className="text-gray-600">Accepted</p>
+                  <p className="text-gray-700 font-medium">Accepted</p>
                 </div>
               </div>
 
@@ -174,7 +175,7 @@ export default function HiringManagerDashboard() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Post Job Card */}
                 <Link href="/hiring-manager/jobs/create">
-                  <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition cursor-pointer">
+                  <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg hover:scale-105 transition cursor-pointer">
                     <div className="text-4xl mb-4">📝</div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
                       Post a New Job
@@ -190,7 +191,7 @@ export default function HiringManagerDashboard() {
 
                 {/* View Jobs Card */}
                 <Link href="/hiring-manager/jobs">
-                  <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition cursor-pointer">
+                  <div className="bg-white rounded-lg shadow-md p-8 hover:shadow-lg hover:scale-105 transition cursor-pointer">
                     <div className="text-4xl mb-4">📋</div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
                       My Jobs

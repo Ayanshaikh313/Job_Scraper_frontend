@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/services/api';
-import { useAuth } from '@/context/AuthContext';
 import { showToast } from '@/utils/toast';
 import type { UserRole } from '@/types';
 
@@ -16,28 +15,30 @@ export default function RegisterPage() {
   const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { isAuthenticated, user } = useAuth();
 
-  // Redirect if already authenticated
+  // Check if already authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'student') {
-        router.push('/student/dashboard');
-      } else if (user.role === 'hiring_manager') {
-        router.push('/hiring-manager/dashboard');
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
+        setIsAuthenticated(true);
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        
+        // Redirect if already authenticated
+        if (userData.role === 'student') {
+          router.push('/student/dashboard');
+        } else if (userData.role === 'hiring_manager') {
+          router.push('/hiring-manager/dashboard');
+        }
       }
     }
-  }, [isAuthenticated, user, router]);
-
-  // Set role from URL params if provided
-  useEffect(() => {
-    const roleParam = searchParams.get('role');
-    if (roleParam === 'student' || roleParam === 'hiring_manager') {
-      setRole(roleParam);
-    }
-  }, [searchParams]);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +58,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await authService.register({
+      const response: any = await authService.register({
         name,
         email,
         password,

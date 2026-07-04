@@ -38,11 +38,11 @@ export default function ApplicantsPage() {
         setLoading(true);
 
         // Fetch job
-        const jobRes = await jobService.getJobById(token, jobId);
+        const jobRes: any = await jobService.getJobById(token, jobId);
         setJob(jobRes.data);
 
         // Fetch applicants for this job directly
-        const appsRes = await applicationService.getJobApplicants(token, jobId, {
+        const appsRes: any = await applicationService.getJobApplicants(token, jobId, {
           limit: 1000,
         });
 

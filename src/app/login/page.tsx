@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { authService } from '@/services/api';
 import { showToast } from '@/utils/toast';
 
 export default function LoginPage() {
@@ -11,19 +11,30 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, user, isAuthenticated } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
 
-  // Redirect if already authenticated
+  // Check if already authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'student') {
-        router.push('/student/dashboard');
-      } else if (user.role === 'hiring_manager') {
-        router.push('/hiring-manager/dashboard');
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
+        setIsAuthenticated(true);
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        
+        // Redirect if already authenticated
+        if (userData.role === 'student') {
+          router.push('/student/dashboard');
+        } else if (userData.role === 'hiring_manager') {
+          router.push('/hiring-manager/dashboard');
+        }
       }
     }
-  }, [isAuthenticated, user, router]);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,27 +42,26 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await login(email, password);
+      const response: any = await authService.login(email, password);
       
-      // Get the user data after login
-      setTimeout(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          
-          // Show success toast
-          showToast.loginSuccess();
-          
-          // Dispatch event to notify navbar of auth change
-          window.dispatchEvent(new Event('authChange'));
-          
-          if (userData.role === 'student') {
-            router.push('/student/dashboard');
-          } else if (userData.role === 'hiring_manager') {
-            router.push('/hiring-manager/dashboard');
-          }
+      // Store token and user in localStorage
+      if (response.token && response.data) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.data));
+
+        // Show success toast
+        showToast.loginSuccess();
+
+        // Dispatch event to notify navbar of auth change
+        window.dispatchEvent(new Event('authChange'));
+
+        // Redirect based on role
+        if (response.data.role === 'student') {
+          router.push('/student/dashboard');
+        } else if (response.data.role === 'hiring_manager') {
+          router.push('/hiring-manager/dashboard');
         }
-      }, 0);
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'Login failed';
       setError(errorMessage);

@@ -9,7 +9,7 @@ export const apiCall = async <T>(
 ): Promise<T> => {
   const { token, ...init } = options;
 
-  const headers: HeadersInit = {
+  const headers: any = {
     'Content-Type': 'application/json',
     ...init.headers,
   };

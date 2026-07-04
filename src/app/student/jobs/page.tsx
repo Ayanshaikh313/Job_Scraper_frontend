@@ -40,7 +40,7 @@ export default function StudentJobsPage() {
         // Fetch internal jobs
         setLoadingInternal(true);
         console.log('[StudentJobsPage] Fetching internal jobs...');
-        const internalRes = await jobService.getJobs(token, {
+        const internalRes: any = await jobService.getJobs(token, {
           search: search || undefined,
           location: location || undefined,
         });
@@ -50,7 +50,7 @@ export default function StudentJobsPage() {
         // Fetch external jobs
         setLoadingExternal(true);
         console.log('[StudentJobsPage] Fetching external jobs...');
-        const externalRes = await jobService.getExternalJobs(token, {
+        const externalRes: any = await jobService.getExternalJobs(token, {
           search: search || undefined,
         });
         console.log('[StudentJobsPage] External jobs response:', externalRes);

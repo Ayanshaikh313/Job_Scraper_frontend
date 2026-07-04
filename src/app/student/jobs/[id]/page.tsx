@@ -33,7 +33,7 @@ export default function JobDetailsPage() {
       if (!token || !jobId) return;
 
       try {
-        const res = await jobService.getJobById(token, jobId);
+        const res: any = await jobService.getJobById(token, jobId);
         setJob(res.data);
         setError('');
       } catch (err: any) {

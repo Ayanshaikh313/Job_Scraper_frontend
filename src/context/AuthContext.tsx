@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const response = await authService.login(email, password);
+      const response: any = await authService.login(email, password);
       const { token: newToken, data } = response;
 
       setToken(newToken);
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (data: RegisterRequest) => {
     setLoading(true);
     try {
-      const response = await authService.register(data);
+      const response: any = await authService.register(data);
       const { token: newToken, data: userData } = response;
 
       setToken(newToken);

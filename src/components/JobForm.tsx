@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { Job } from '@/types';
+import { showToast } from '@/utils/toast';
 
 interface JobFormProps {
   initialData?: Job;
   onSubmit: (data: any) => Promise<void>;
   isLoading?: boolean;
   buttonText?: string;
+  isEditing?: boolean;
 }
 
 export const JobForm = ({
@@ -15,6 +17,7 @@ export const JobForm = ({
   onSubmit,
   isLoading = false,
   buttonText = 'Create Job',
+  isEditing = false,
 }: JobFormProps) => {
   const [title, setTitle] = useState(initialData?.title || '');
   const [company, setCompany] = useState(initialData?.company || '');
@@ -35,7 +38,9 @@ export const JobForm = ({
     setSuccess('');
 
     if (!title || !company || !location || !description || !salary || !employmentType) {
-      setError('Please fill in all fields');
+      const errorMsg = 'Please fill in all fields';
+      setError(errorMsg);
+      showToast.validationError(errorMsg);
       return;
     }
 
@@ -48,6 +53,14 @@ export const JobForm = ({
         salary,
         employmentType,
       });
+      
+      // Show appropriate toast based on whether it's create or edit
+      if (isEditing) {
+        showToast.jobUpdated();
+      } else {
+        showToast.jobCreated();
+      }
+      
       setSuccess('Job saved successfully!');
       if (!initialData) {
         // Reset form on create
@@ -59,7 +72,9 @@ export const JobForm = ({
         setEmploymentType('Full-time');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to save job');
+      const errorMsg = err.message || 'Failed to save job';
+      setError(errorMsg);
+      showToast.apiError(errorMsg);
     }
   };
 

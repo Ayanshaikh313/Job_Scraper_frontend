@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { showToast } from '@/utils/toast';
 import type { UserRole } from '@/types';
 
 export default function RegisterPage() {
@@ -69,6 +70,12 @@ export default function RegisterPage() {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.data));
 
+        // Show success toast
+        showToast.registerSuccess();
+
+        // Dispatch event to notify navbar of auth change
+        window.dispatchEvent(new Event('authChange'));
+
         // Redirect based on role
         if (response.data.role === 'student') {
           router.push('/student/dashboard');
@@ -77,7 +84,9 @@ export default function RegisterPage() {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      const errorMessage = err.message || 'Registration failed';
+      setError(errorMessage);
+      showToast.apiError(errorMessage);
     } finally {
       setLoading(false);
     }

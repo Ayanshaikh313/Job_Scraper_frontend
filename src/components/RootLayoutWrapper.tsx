@@ -1,6 +1,8 @@
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '@/context/AuthContext';
 import Link from 'next/link';
 
@@ -13,15 +15,37 @@ export const RootLayoutWrapper = ({ children }: RootLayoutWrapperProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  useEffect(() => {
-    setMounted(true);
+  const updateAuthState = () => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     
     if (token && storedUser) {
       setIsAuthenticated(true);
       setUser(JSON.parse(storedUser));
+    } else {
+      setIsAuthenticated(false);
+      setUser(null);
     }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    updateAuthState();
+
+    // Listen for storage changes (e.g., from other tabs or when logging in/out)
+    const handleStorageChange = () => {
+      updateAuthState();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events from the same tab
+    window.addEventListener('authChange', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authChange', handleStorageChange);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -34,6 +58,18 @@ export const RootLayoutWrapper = ({ children }: RootLayoutWrapperProps) => {
 
   return (
     <AuthProvider>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       {/* Simple navbar that doesn't use context */}
       <nav className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -77,11 +113,14 @@ export const RootLayoutWrapper = ({ children }: RootLayoutWrapperProps) => {
 
                   {user?.role === 'hiring_manager' && (
                     <>
-                      <Link href="/jobs/create" className="text-gray-700 hover:text-blue-600 transition">
-                        Post Job
-                      </Link>
-                      <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 transition">
+                      <Link href="/hiring-manager/dashboard" className="text-gray-700 hover:text-blue-600 transition">
                         Dashboard
+                      </Link>
+                      <Link href="/hiring-manager/jobs" className="text-gray-700 hover:text-blue-600 transition">
+                        My Jobs
+                      </Link>
+                      <Link href="/hiring-manager/jobs/create" className="text-gray-700 hover:text-blue-600 transition">
+                        Post Job
                       </Link>
                     </>
                   )}

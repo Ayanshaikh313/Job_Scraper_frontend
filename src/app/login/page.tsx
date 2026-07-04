@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { showToast } from '@/utils/toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -33,12 +34,17 @@ export default function LoginPage() {
       const response = await login(email, password);
       
       // Get the user data after login
-      // The login function updates the auth context, so we can access user from there
-      // Wait a tick for state to update before redirecting
       setTimeout(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           const userData = JSON.parse(storedUser);
+          
+          // Show success toast
+          showToast.loginSuccess();
+          
+          // Dispatch event to notify navbar of auth change
+          window.dispatchEvent(new Event('authChange'));
+          
           if (userData.role === 'student') {
             router.push('/student/dashboard');
           } else if (userData.role === 'hiring_manager') {
@@ -47,7 +53,9 @@ export default function LoginPage() {
         }
       }, 0);
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      const errorMessage = err.message || 'Login failed';
+      setError(errorMessage);
+      showToast.apiError(errorMessage);
     } finally {
       setLoading(false);
     }

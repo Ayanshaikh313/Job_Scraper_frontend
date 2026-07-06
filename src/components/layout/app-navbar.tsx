@@ -23,7 +23,7 @@ export function AppNavbar({ isAuthenticated, user, onLogout, className, ...props
   const nav = [
     { label: "Home", href: "/" },
     { label: "Jobs", href: "/student/jobs" },
-    { label: "ATS Resume Scanner", href: "/" },
+    { label: "ATS Resume Scanner", href: "/ats-scanner" },
     { label: "Dashboard", href: user?.role === 'hiring_manager' ? "/hiring-manager/dashboard" : "/student/dashboard" },
     { label: "Pricing", href: "/pricing" },
   ];

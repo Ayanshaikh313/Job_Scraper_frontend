@@ -16,42 +16,48 @@ interface User {
   role: UserRole;
 }
 
-export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+export const ProtectedRoute = ({
+  children,
+  requiredRole,
+}: ProtectedRouteProps) => {
   const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
   const router = useRouter();
 
-  // Check authentication from localStorage (client-side only)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const checkAuth = () => {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
 
-      if (token && storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setIsAuthenticated(true);
-
-          // Check role requirement
-          if (requiredRole) {
-            const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-            if (!roles.includes(userData.role)) {
-              router.push('/');
-              return;
-            }
-          }
-        } catch (err) {
-          router.push('/login');
-          return;
-        }
-      } else {
-        router.push('/login');
+      if (!token || !storedUser) {
+        router.replace('/login');
+        return;
       }
-    }
 
-    setLoading(false);
+      try {
+        const userData: User = JSON.parse(storedUser);
+
+        if (requiredRole) {
+          const roles = Array.isArray(requiredRole)
+            ? requiredRole
+            : [requiredRole];
+
+          if (!roles.includes(userData.role)) {
+            router.replace('/');
+            return;
+          }
+        }
+
+        setAuthorized(true);
+      } catch (error) {
+        console.error('Auth error:', error);
+        router.replace('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, [requiredRole, router]);
 
   if (loading) {
@@ -62,15 +68,8 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!authorized) {
     return null;
-  }
-
-  if (requiredRole) {
-    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!roles.includes(user.role)) {
-      return null;
-    }
   }
 
   return <>{children}</>;

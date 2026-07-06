@@ -298,7 +298,7 @@ export default function HiringManagerDashboard() {
                               <TableCell className="font-medium text-foreground">{candidate.studentId?.name || 'Unknown'}</TableCell>
                               <TableCell>{candidate.jobId?.title || 'N/A'}</TableCell>
                               <TableCell>
-                                <Badge variant={candidate.status === 'Accepted' ? 'secondary' : candidate.status === 'Reviewing' ? 'outline' : 'ghost'}>
+                                <Badge variant={candidate.status === 'Accepted' ? 'secondary' : candidate.status === 'Reviewing' ? 'outline' : 'outline'}>
                                   {candidate.status}
                                 </Badge>
                               </TableCell>

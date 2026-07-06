@@ -80,7 +80,6 @@ export const JobForm = ({
       showToast.validationError(errorMsg);
       return;
     }
-
     try {
       await onSubmit({
         title,
